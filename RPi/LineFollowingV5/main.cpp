@@ -35,7 +35,7 @@ void PID(int *error,float *sumError, float *lastError)
     // Adjust steering using proportional, integral and derivative control
     *sumError += *error;
 
-    *error * LINE_FOLLOW_KP + *sumError * LINE_FOLLOW_KI +(*error - *lastError) * LINE_FOLLOW_KD;
+    *error = *error * LINE_FOLLOW_KP + (*sumError * LINE_FOLLOW_KI) + ((*error - *lastError) * LINE_FOLLOW_KD);
 
     // Update last error
     *lastError = *error;

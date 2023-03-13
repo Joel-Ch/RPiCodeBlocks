@@ -1,53 +1,48 @@
 #include <opencv2/opencv.hpp>
 #include <iostream>
 #include <cmath>
+#include <map>
 
 using namespace cv;
 using namespace std;
 
+int euclidDistance(Scalar A,int* B){
+    return sqrt((A[0]-B[0])*(A[0]-B[0]) +(A[1]-B[1])*(A[1]-B[1]) +(A[2]-B[2])*(A[2]-B[2]));
+}
+
+Mat doKMeans(Mat3b img)
+{
+    int K = 4;
+    int n = img.rows * img.cols;
+    Mat data = img.reshape(1, n);
+    data.convertTo(data, CV_32F);
+
+    vector<int> labels;
+    Mat1f centres;
+    kmeans(data, K, labels, cv::TermCriteria(), 1, cv::KMEANS_PP_CENTERS, centres);
+
+    for (int i = 0; i < n; ++i)
+    {
+        data.at<float>(i, 0) = centres(labels[i], 0);
+        data.at<float>(i, 1) = centres(labels[i], 1);
+        data.at<float>(i, 2) = centres(labels[i], 2);
+    }
+
+    Mat reduced = data.reshape(3, img.rows);
+    reduced.convertTo(reduced, CV_8U);
+
+    //find the colour most different from the others
+
+    return reduced;
+}
+
+
 int main()
 {
-    Mat img = imread("C:/Users/poely/Downloads/lenna.jpg");
-    Mat samples(img.rows * img.cols, 3, CV_32F);
-    int idx = 0;
-    for (int row = 0; row < img.rows; row++) {
-        for (int col = 0; col < img.cols; col++) {
-            Vec3b color = img.at<Vec3b>(row, col);
-            samples.at<float>(idx, 0) = color[0];
-            samples.at<float>(idx, 1) = color[1];
-            samples.at<float>(idx, 2) = color[2];
-            idx++;
-        }
-    }
-
-    int K = 8;
-    Mat labels;
-    TermCriteria criteria(TermCriteria::EPS + TermCriteria::MAX_ITER, 10, 1.0);
-    Mat centers;
-    kmeans(samples, K, labels, criteria, 10, KMEANS_RANDOM_CENTERS, centers);
-
-    cout << "Color Palette:" << endl;
-    int count[K];
-    memset(count, 0, sizeof count);
-    for (int i = 0; i < labels.rows; i++) {
-        count[labels.at<int>(i, 0)]++;
-    }
-
-    float total_pixels = img.rows * img.cols;
-    int max_color = 0;
-    float max_percentage = 0.0f;
-    for (int i = 0; i < K; i++) {
-        float percentage = (count[i] / total_pixels) * 100;
-        if (percentage > max_percentage) {
-            max_percentage = percentage;
-            max_color = i;
-        }
-        cout << "Color " << i + 1 << ": ";
-        cout << (int)centers.at<float>(i, 0) << " ";
-        cout << (int)centers.at<float>(i, 1) << " ";
-        cout << (int)centers.at<float>(i, 2) << " ";
-        cout << percentage << "%" << endl;
-    }
-    cout << "The most common color is Color " << max_color + 1 << " with " << max_percentage << "%" << endl;
+    Mat3b img = imread("C:/OpenCV/OpenCV Task/Images/RedCar.bmp");
+    imshow("Image",img);
+    img = doKMeans(img);
+    imshow("Kmeans",img);
+    waitKey(0);
     return 0;
 }

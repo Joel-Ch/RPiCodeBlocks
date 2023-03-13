@@ -66,7 +66,7 @@ String DetermineColour(Scalar average){//can find yellow,cyan and purple (also e
 
 int main( int argc, char** argv )
 {
-    String imageName("C:/OpenCV/OpenCV Task/Images/GreenApple.bmp"); // by default
+    String imageName("C:/OpenCV/OpenCV Task/Images/RedApple.bmp"); // by default
     if (argc > 1)
     {
         imageName = argv[1];
