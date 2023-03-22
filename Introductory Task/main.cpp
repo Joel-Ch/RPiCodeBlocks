@@ -35,8 +35,8 @@ Mat sobel(Mat gray){
 Mat canny(Mat src){
 	Mat detected_edges;
 
-	int lowThreshold = 250;
-	int highThreshold = 750;
+	int lowThreshold = 1500;
+	int highThreshold = 4500;
 	int kernel_size = 5;
 	cv::Canny(src, detected_edges, lowThreshold, highThreshold, kernel_size);
 
@@ -66,7 +66,7 @@ String DetermineColour(Scalar average){//can find yellow,cyan and purple (also e
 
 int main( int argc, char** argv )
 {
-    String imageName("C:/OpenCV/OpenCV Task/Images/RedApple.bmp"); // by default
+    String imageName("C:/OpenCV/OpenCV Task/Images/RedCar.bmp"); // by default
     if (argc > 1)
     {
         imageName = argv[1];
@@ -124,7 +124,7 @@ int main( int argc, char** argv )
 	//3. Edge detector
 	GaussianBlur(gray, gray, Size(3,3), 0, 0, BORDER_DEFAULT);
 	Mat edges;
-	bool useCanny = false;
+	bool useCanny = true;
 	if(useCanny){
 		edges = canny(gray);
 	} else {
