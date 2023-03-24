@@ -4,8 +4,8 @@
 #include "opencv\cv.h"
 #include <opencv2/opencv.hpp>
 
-#define TEST
-#define COLOUR
+//#define TEST
+//#define COLOUR
 #define RESULT
 
 using namespace cv;
@@ -35,8 +35,8 @@ Mat sobel(Mat gray){
 Mat canny(Mat src){
 	Mat detected_edges;
 
-	int lowThreshold = 1500;
-	int highThreshold = 4500;
+	int lowThreshold = 1000;
+	int highThreshold = 3000;
 	int kernel_size = 5;
 	cv::Canny(src, detected_edges, lowThreshold, highThreshold, kernel_size);
 
@@ -147,7 +147,7 @@ int main( int argc, char** argv )
 	Mat elementDilate = getStructuringElement(dilateType,
 		Size(2*dilateSize + 1, 2*dilateSize+1),
 		Point(dilateSize, dilateSize));
-	dilate(edges, dilateGrad, elementDilate);
+	dilate(dilateGrad, dilateGrad, elementDilate);
 
 	#ifdef TEST
 	imshow("4. Dilate", dilateGrad);
@@ -228,12 +228,14 @@ int main( int argc, char** argv )
 	#endif // TEST
 
 	//Source with largest contour boxed
-	rectangle(src, boundingRectangle, Scalar(0, 255, 0), 1, 8, 0);
+	//rectangle(src, boundingRectangle, Scalar(0, 255, 0), 1, 8, 0);
 	#ifdef TEST
 	imshow("src boxed", src);
 	#endif // TEST
     Mat enddisp;
-	cv::vconcat(src, maskedSrc, enddisp);
+	cvtColor(edges,edges,COLOR_GRAY2BGR);
+	cv::hconcat(src, edges, enddisp);
+    cv::hconcat(enddisp, maskedSrc, enddisp);
 	#ifdef RESULT
 	imshow("Result", enddisp);
 	#endif // RESULT
