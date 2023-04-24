@@ -149,12 +149,7 @@ string getColour(Mat frame)
         cv::drawContours(SymbolHSV, contours, LAI, scalar(0, 0, 255), 2);
         imshow("Largest contour", SymbolHSV);                               //Draw the largest contour to the HSV Image
 
-
-        Point2f dstPoints [4];
-        dstPoints[0] = cv::Point2f(0, 0);
-        dstPoints[0] = cv::Point2f(349, 0);
-        dstPoints[0] = cv::Point2f(349, 349);
-        dstPoints[0] = cv::Point2f(0, 349);         // define points to be used for the warping of image
+        cv::Point2f dstPoints [4] = (cv::Point2f(0, 0), cv::Point2f(349, 0), cv::Point2f(349, 349), cv::Point2f(0, 349));
 
         Mat M = cv::getPerspectiveTransform(srcPoints, dstPoints);      // Using the srcPoints[Points found on the rectangle as seen by the camera] and the desired points [dstPoints]
         // we return the transformation needed into Mat M.
@@ -167,10 +162,7 @@ string getColour(Mat frame)
 
         colour = SymbolCompareAndRect(Warped);                              //Pass the transformed 350 x 350 image to the comparing function to determine the shape and corresponding color
     }
-    else
-    {
-        colour = "black";
-    }
+
     return colour;
 }
 
