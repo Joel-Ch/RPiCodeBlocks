@@ -32,13 +32,13 @@ const int BASESPEED = 150;
 
 float Max(float values[])
 {
-    float maxv=0;
+    float j=0;
     for (int i=0; i<sizeof(values); i++)
     {
         if (maxv<values[i])
-            maxv=values[i];
+            j=i;
     }
-    return maxv;
+    return j;
 }
 
 string SymbolCompareAndRect(Mat Warped)
@@ -57,16 +57,8 @@ string SymbolCompareAndRect(Mat Warped)
     }
 
     int ShapeMatch = 0, s = 0;
-    float ShapeValue = Max(match);                            //Finds the largest % match
+    float s = Max(match);                            //Finds the largest % match
 
-    while (ShapeMatch == 0)                                   //Finds the position of the largest match value
-    {
-
-        if (ShapeValue == match[s])
-            ShapeMatch = 1;
-        else
-            s = s + 1;
-    }
 
     cout<<ShapeName[s];                 //displays the color and shape from the position of the largest value
     printf("\t");
@@ -104,7 +96,6 @@ string getColour(Mat frame)
 
     int numNonZero = 0;
     numNonZero = countNonZero(frameHSV);        // Find any pixels which fell in the specified range.
-
 
     if(numNonZero > 1000)           // Trial and error this value too
     {
@@ -149,12 +140,8 @@ string getColour(Mat frame)
         cv::drawContours(SymbolHSV, contours, LAI, scalar(0, 0, 255), 2);
         imshow("Largest contour", SymbolHSV);                               //Draw the largest contour to the HSV Image
 
-
-        Point2f dstPoints [4];
-        dstPoints[0] = cv::Point2f(0, 0);
-        dstPoints[0] = cv::Point2f(349, 0);
-        dstPoints[0] = cv::Point2f(349, 349);
-        dstPoints[0] = cv::Point2f(0, 349);         // define points to be used for the warping of image
+        Point2f dstPoints [4] = {cv:Point2f(0, 0), cv::Point2f(349, 0), cv::Point2f(349, 349), cv::Point2f(0, 349)};
+        // define points to be used for the warping of image
 
         Mat M = cv::getPerspectiveTransform(srcPoints, dstPoints);      // Using the srcPoints[Points found on the rectangle as seen by the camera] and the desired points [dstPoints]
         // we return the transformation needed into Mat M.
@@ -180,213 +167,177 @@ string getColour(Mat frame)
 
         return colour;
     }
+}
 
-
-    cv::Mat getBinaryImage(cv::Mat frame,string colour)
+cv::Mat getBinaryImage(cv::Mat frame,string colour)
+{
+    cv::Mat binary;
+    if (colour == "blackold")
     {
-        cv::Mat binary;
-        if (colour == "blackold")
-        {
-            cv::Mat gray;
-            cvtColor(frame, gray, COLOR_BGR2GRAY); // this is the old version
-            threshold(gray, binary, 100, 255, THRESH_BINARY_INV);
-        }
-        else
-        {
-            cv::Mat frameHsv, kernel;
-            int numNonZero;
-            cvtColor(frame, frameHsv, COLOR_BGR2HSV);
-            if (colour == "red")
-            {
-                // two masks for red
-                cv::Mat binary2;
-                inRange(frameHsv, Scalar(0, 70, 50), Scalar(10, 255, 255), binary); // red has 2 masks as it needs to select both 160-180 and 0-10 ranges
-                inRange(frameHsv, Scalar(160, 70, 50), Scalar(180, 255, 255), binary2);
-                // combine masks
-                cv::bitwise_or(binary, binary2, binary);
-                // reduce noise
-                kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
-                cv::morphologyEx(binary, binary, MORPH_OPEN, kernel);
-
-            }
-            else if (colour == "green")
-            {
-                inRange(frameHsv, Scalar(36, 70, 70), Scalar(86, 255, 255), binary);
-                kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
-                cv::morphologyEx(binary, binary, MORPH_OPEN, kernel);
-
-
-            }
-            else if (colour == "blue")
-            {
-                inRange(frameHsv, Scalar(100, 150, 0), Scalar(140, 255, 255), binary);
-                kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
-                cv::morphologyEx(binary, binary, MORPH_OPEN, kernel);
-
-            }
-            else if (colour == "yellow")
-            {
-                inRange(frameHsv, Scalar(20, 100, 100), Scalar(50, 255, 255), binary);
-                kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
-                cv::morphologyEx(binary, binary, MORPH_OPEN, kernel);
-
-            }
-            else if (colour == "black")
-            {
-                inRange(frameHsv, Scalar(0, 0, 0), Scalar(180, 255, 70), binary);
-                kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
-                cv::morphologyEx(binary, binary, MORPH_OPEN, kernel);
-
-            }
-        }
-        return binary;
+        cv::Mat gray;
+        cvtColor(frame, gray, COLOR_BGR2GRAY); // this is the old version
+        threshold(gray, binary, 100, 255, THRESH_BINARY_INV);
     }
-
-    cv::Rect getMaxRect(vector<vector<Point>> contours,int *maxArea)
+    else
     {
-        Rect maxRect;
-        for (const auto &contour : contours)
+        cv::Mat frameHsv, kernel;
+        int numNonZero;
+        cvtColor(frame, frameHsv, COLOR_BGR2HSV);
+        if (colour == "red")
         {
-            Rect rect = boundingRect(contour);
-            int area = rect.width * rect.height;
-            if (area > *maxArea)
-            {
-                *maxArea = area;
-                maxRect = rect;
-            }
+            // two masks for red
+            cv::Mat binary2;
+            inRange(frameHsv, Scalar(0, 70, 50), Scalar(10, 255, 255), binary); // red has 2 masks as it needs to select both 160-180 and 0-10 ranges
+            inRange(frameHsv, Scalar(160, 70, 50), Scalar(180, 255, 255), binary2);
+            // combine masks
+            cv::bitwise_or(binary, binary2, binary);
+            // reduce noise
+            kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
+            cv::morphologyEx(binary, binary, MORPH_OPEN, kernel);
         }
-        return maxRect;
+        else if (colour == "green")
+        {
+            inRange(frameHsv, Scalar(36, 70, 70), Scalar(86, 255, 255), binary);
+            kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
+            cv::morphologyEx(binary, binary, MORPH_OPEN, kernel);
+        }
+        else if (colour == "blue")
+        {
+            inRange(frameHsv, Scalar(100, 150, 0), Scalar(140, 255, 255), binary);
+            kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
+            cv::morphologyEx(binary, binary, MORPH_OPEN, kernel);
+        }
+        else if (colour == "yellow")
+        {
+            inRange(frameHsv, Scalar(20, 100, 100), Scalar(50, 255, 255), binary);
+            kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
+            cv::morphologyEx(binary, binary, MORPH_OPEN, kernel);
+        }
+        else if (colour == "black")
+        {
+            inRange(frameHsv, Scalar(0, 0, 0), Scalar(180, 255, 70), binary);
+            kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
+            cv::morphologyEx(binary, binary, MORPH_OPEN, kernel);
+        }
     }
-
-    int getAngle(Point centre)
+    return binary;
+}
+cv::Rect getMaxRect(vector<vector<Point>> contours,int *maxArea)
+{
+    Rect maxRect;
+    for (const auto &contour : contours)
     {
-        Point centreBottom = Point(ROI_WIDTH / 2, ROI_HEIGHT);
-
-        // calculating tan breaks the code when the centres are above each other (divide by zero!)
-        if (centreBottom.x == centre.x)
-            centre.x += 1;
-
-        float gradient = -((float)centreBottom.y - (float)centre.y) / ((float)centreBottom.x - (float)centre.x);
-        float rawAngle = atan(gradient) * (180 / 3.14159265);
-        // this function returns an angle from 90 -> -90 but -90 and 90 are both almost vertical so this needs some editing to enable a useful angle output
-        int angle;
-        if (rawAngle > 0)
+        Rect rect = boundingRect(contour);
+        int area = rect.width * rect.height;
+        if (area > *maxArea)
         {
-            angle = 180 - rawAngle;
+            *maxArea = area;
+            maxRect = rect;
         }
-        else if (rawAngle < 0)
-        {
-            angle = -rawAngle;
-        }
-        return angle;
     }
-
-
-    int main(int argc, char **argv)
+    return maxRect;
+}
+int getAngle(Point centre)
+{
+    Point centreBottom = Point(ROI_WIDTH / 2, ROI_HEIGHT);
+    // calculating tan breaks the code when the centres are above each other (divide by zero!)
+    if (centreBottom.x == centre.x)
+        centre.x += 1;
+    float gradient = -((float)centreBottom.y - (float)centre.y) / ((float)centreBottom.x - (float)centre.x);
+    float rawAngle = atan(gradient) * (180 / 3.14159265);
+    // this function returns an angle from 90 -> -90 but -90 and 90 are both almost vertical so this needs some editing to enable a useful angle output
+    int angle;
+    if (rawAngle > 0)
     {
-        setupCamera(FRAME_WIDTH, FRAME_HEIGHT); // Enable the camera for OpenCV
-
-
-
-        // Initialize ROI for line following
-        Rect roi(ROI_LEFT, ROI_TOP, ROI_WIDTH, ROI_HEIGHT);
-
-        float lastError = 0, lastAngle = 0, sumAngle = 0;//declare variables
-        int rightSpeed = 0, leftSpeed = 0;
-        bool Reverse = true;
-
-        while (true)
-        {
-            // Capture a frame from the camera
-            Mat frame;
-            while (frame.empty())
-                frame = captureFrame(); // Capture a frame from the camera and store in a new matrix variable
-
-            cv::flip(frame,frame,0);
-            cv::flip(frame,frame,1);//flip image both vertically and horizontally to make it the correct way up
-            cv::imshow("Photo", frame); // Display the image in the window
-
-            // Apply ROI for line following
-            //Mat roi_frame = frame;
-            Mat roiFrame = frame(roi);
-            string colour = getColour(frame);
-            printf("%s", colour);
-
-            cv::Mat binary = getBinaryImage(roiFrame, colour);//get binary image
-
-            cv::imshow("Binary", binary);
-
-            // Find contours in binary image
-            vector<vector<Point>> contours;//vector of vectors
-            cv::findContours(binary, contours, RETR_LIST, CHAIN_APPROX_SIMPLE);
-
-            // Find contour with largest area + draw a rectangle around it
-            int maxArea = 0;
-            Rect maxRect = getMaxRect(contours, &maxArea);
-
-            //find rectangle centre coordinates
-            Point centre = Point(maxRect.x + maxRect.width / 2,maxRect.y + maxRect.height / 2);
-
-            if (maxArea == 0)//if there is no rectangle
-            {
-                centre = Point(ROI_WIDTH/2,ROI_HEIGHT/2);
-                Reverse = true;
-            }
-            else if (maxArea > 0)
-            {
-                Reverse = false;
-            }
-
-            int angle = getAngle(centre);//get angle
-
-            PID(&angle,&sumAngle,&lastAngle);//PID!
-
-            int rightSpeed, leftSpeed;
-            if (Reverse == true)
-            {
-                angle = 90;
-                rightSpeed = leftSpeed = -BASESPEED;
-            }
-            else if (Reverse == false)
-            {
-                //set wheel speeds
-                rightSpeed = BASESPEED - ((angle - 90) * 0.5);
-                leftSpeed = BASESPEED + ((angle - 90) * 0.5);
-
-                //reduce speed if angle is too large
-                if (abs(angle - 90 >= 20))
-                {
-                    rightSpeed = rightSpeed * 0.8;
-                    leftSpeed = leftSpeed * 0.8;
-                }
-                else if (abs(angle - 90) >= 30)
-                {
-                    rightSpeed = rightSpeed * 0.5;
-                    leftSpeed = leftSpeed * 0.5;
-                }
-            }
-
-            char dataString[8] = {};
-            sprintf(dataString, "%-3i/%-4i/%-4i", angle, rightspeed, leftspeed); // this is String printf (prints to a string)
-            arduino.i2cWrite(dataString, 13);      // write the string via i2c
-
-            // draw an output image
-            cv::Mat contourDisp = roiFrame.clone();                          // clone roi_frame (image) into contourDisp
-            cv::drawContours(contourDisp, contours, -1, Scalar(0, 0, 255), 2);//draw contours on the output image
-            cv::circle(contourDisp,centre,5,Scalar(0,255,0),3);//draw green circle at the centre of the rectangle
-            line(contourDisp, centre, Point(ROI_WIDTH / 2, ROI_HEIGHT), Scalar(0, 255, 0), 2); // draw a line on the output image
-            imshow("Contour", contourDisp);//display output image
-
-            printf("Centre: %i %i\tAngle: %i\t%s\n", centre.x, centre.y, angle, dataString);//print results
-
-            int key = cv::waitKey(1); // Wait 1ms for a keypress (required to update windows)
-
-            key = (key == 255) ? -1 : key; // Check if the ESC key has been pressed
-            if (key == 27)
-                break;
-
-            usleep(15000);//delay (servo can only update at 50Hz so must delay until servo can update again)
-        }
-
-        return 0;
+        angle = 180 - rawAngle;
     }
+    else if (rawAngle < 0)
+    {
+        angle = -rawAngle;
+    }
+    return angle;
+}
+int main(int argc, char **argv)
+{
+    setupCamera(FRAME_WIDTH, FRAME_HEIGHT); // Enable the camera for OpenCV
+    // Initialize ROI for line following
+    Rect roi(ROI_LEFT, ROI_TOP, ROI_WIDTH, ROI_HEIGHT);
+    float lastError = 0, lastAngle = 0, sumAngle = 0;//declare variables
+    int rightSpeed = 0, leftSpeed = 0;
+    bool Reverse = true;
+    while (true)
+    {
+        // Capture a frame from the camera
+        Mat frame;
+        while (frame.empty())
+            frame = captureFrame(); // Capture a frame from the camera and store in a new matrix variable
+        cv::flip(frame,frame,0);
+        cv::flip(frame,frame,1);//flip image both vertically and horizontally to make it the correct way up
+        cv::imshow("Photo", frame); // Display the image in the window
+        // Apply ROI for line following
+        //Mat roi_frame = frame;
+        Mat roiFrame = frame(roi);
+        string colour = getColour(frame);
+        printf("%s", colour);
+        cv::Mat binary = getBinaryImage(roiFrame, colour);//get binary image
+        cv::imshow("Binary", binary);
+        // Find contours in binary image
+        vector<vector<Point>> contours;//vector of vectors
+        cv::findContours(binary, contours, RETR_LIST, CHAIN_APPROX_SIMPLE);
+        // Find contour with largest area + draw a rectangle around it
+        int maxArea = 0;
+        Rect maxRect = getMaxRect(contours, &maxArea);
+        //find rectangle centre coordinates
+        Point centre = Point(maxRect.x + maxRect.width / 2,maxRect.y + maxRect.height / 2);
+        if (maxArea == 0)//if there is no rectangle
+        {
+            centre = Point(ROI_WIDTH/2,ROI_HEIGHT/2);
+            Reverse = true;
+        }
+        else if (maxArea > 0)
+        {
+            Reverse = false;
+        }
+        int angle = getAngle(centre);//get angle
+        PID(&angle,&sumAngle,&lastAngle);//PID!
+        int rightSpeed, leftSpeed;
+        if (Reverse == true)
+        {
+            angle = 90;
+            rightSpeed = leftSpeed = -BASESPEED;
+        }
+        else if (Reverse == false)
+        {
+            //set wheel speeds
+            rightSpeed = BASESPEED - ((angle - 90) * 0.5);
+            leftSpeed = BASESPEED + ((angle - 90) * 0.5);
+            //reduce speed if angle is too large
+            if (abs(angle - 90 >= 20))
+            {
+                rightSpeed = rightSpeed * 0.8;
+                leftSpeed = leftSpeed * 0.8;
+            }
+            else if (abs(angle - 90) >= 30)
+            {
+                rightSpeed = rightSpeed * 0.5;
+                leftSpeed = leftSpeed * 0.5;
+            }
+        }
+        char dataString[8] = {};
+        sprintf(dataString, "%-3i/%-4i/%-4i", angle, rightspeed, leftspeed); // this is String printf (prints to a string)
+        arduino.i2cWrite(dataString, 13);      // write the string via i2c
+        // draw an output image
+        cv::Mat contourDisp = roiFrame.clone();                          // clone roi_frame (image) into contourDisp
+        cv::drawContours(contourDisp, contours, -1, Scalar(0, 0, 255), 2);//draw contours on the output image
+        cv::circle(contourDisp,centre,5,Scalar(0,255,0),3);//draw green circle at the centre of the rectangle
+        line(contourDisp, centre, Point(ROI_WIDTH / 2, ROI_HEIGHT), Scalar(0, 255, 0), 2); // draw a line on the output image
+        imshow("Contour", contourDisp);//display output image
+        printf("Centre: %i %i\tAngle: %i\t%s\n", centre.x, centre.y, angle, dataString);//print results
+        int key = cv::waitKey(1); // Wait 1ms for a keypress (required to update windows)
+        key = (key == 255) ? -1 : key; // Check if the ESC key has been pressed
+        if (key == 27)
+            break;
+        usleep(15000);//delay (servo can only update at 50Hz so must delay until servo can update again)
+    }
+    return 0;
+}
